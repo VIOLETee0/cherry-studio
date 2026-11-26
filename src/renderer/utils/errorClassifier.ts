@@ -164,6 +164,13 @@ export function getErrorHttpStatus(error: SerializedError): number | undefined {
   return terminalStatus !== undefined && terminalStatus >= 500 && terminalStatus < 600 ? terminalStatus : undefined
 }
 
+function isPiGatewayRoutingRefusal(error: SerializedError): boolean {
+  return (
+    typeof error.message === 'string' &&
+    /cannot be routed through the internal gateway for pi agents/i.test(error.message)
+  )
+}
+
 export function classifyError(error?: SerializedError, providerId?: string): ErrorClassification {
   const providerSuffix = providerId ? `?id=${encodeURIComponent(providerId)}` : ''
   const classify = (category: ErrorCategory): ErrorClassification => ({
@@ -172,7 +179,7 @@ export function classifyError(error?: SerializedError, providerId?: string): Err
     navTarget: navTargetFor(category, providerSuffix)
   })
 
-  if (!error || error.errorSource === 'local') return classify('unknown')
+  if (!error || error.errorSource === 'local' || isPiGatewayRoutingRefusal(error)) return classify('unknown')
 
   const claudeCodeExitCategory = getClaudeCodeExitCategory(error)
   if (claudeCodeExitCategory) return classify(claudeCodeExitCategory)
