@@ -1,5 +1,9 @@
 import type { SerializedError } from '@renderer/types/error'
-import { isSerializedAiSdkRetryError, isSerializedAiSdkToolCallRepairError } from '@renderer/types/error'
+import {
+  isSerializedAiSdkInvalidToolInputError,
+  isSerializedAiSdkRetryError,
+  isSerializedAiSdkToolCallRepairError
+} from '@renderer/types/error'
 import { classifyErrorCategory, type ErrorCategory, isErrorCategory } from '@shared/utils/errorCategory'
 
 export type { ErrorCategory } from '@shared/utils/errorCategory'
@@ -191,6 +195,7 @@ export function classifyError(error?: SerializedError, providerId?: string): Err
     const model = classify('model')
     return localFailure.providerId && !localFailure.modelId ? { ...model, navTarget: '/settings/provider' } : model
   }
+  if (isSerializedAiSdkInvalidToolInputError(error)) return classify('parse')
   const numStatus = getErrorHttpStatus(error)
 
   const responseBodyText = typeof errorBag.responseBody === 'string' ? errorBag.responseBody : ''
